@@ -4,7 +4,7 @@
 
 // FILL THE GRID
 
-void grid_assing(int grid[4][4], int constant, int roworcolum, int cres_or_decre)
+void clue_4(int grid[4][4], int constant, int roworcolum, int cres_or_decre)
 {
 	int x = 0; // counter
 	while(x < 4) // to count from 0 to 3
@@ -48,7 +48,7 @@ void assing(int grid[4][4], int i, int j, int arr[4][4])
 	if (arr[i][j] == 1)
 		clue_1(grid, i, j); // put building 4
 	else if (arr[i][j] == 4)
-		grid_assing(grd, j, i < 2, 1 % 2); // fill the complete row or column with building 1, 2, 3 and 4 (this order)
+		clue_4(grd, j, i < 2, 1 % 2); // fill the complete row or column with building 1, 2, 3 and 4 (this order)
 
 int permutations[24][4] =
 {
@@ -139,12 +139,12 @@ int compatible(int perm[4], int line[4]) // check if a possible permute (ex: {3,
 	return 1;   // passed all the positions of the grid, is compatible
 }
 
-void solve_23(int grid[4][4], int i, int j, int clue) // to get the grid, line by line, with actual values, in the correct order
+void clue_2_3(int grid[4][4], int i, int j, int clue, int *changed) // to get the grid, line by line, with actual values, in the correct order
 {
 	int line[4]; // counter for the lines
 	int result[4] = {0, 0, 0, 0}; // initial permute, all free spaces
 	int found = 0; // inicial found
-	int p = 0;
+	int p = 0; // counter into the permutes, p = 0 means permute[0] = {1,2,3,4}
 	
 	get_line(grid, i, j, line);   // step 1: get the actual line, in the correct order, with 0 in the places where we still don't know which value will be
 	
@@ -179,16 +179,16 @@ void solve_23(int grid[4][4], int i, int j, int clue) // to get the grid, line b
 			        int x = 0; // counter into the line
 			        while (x < 4)
 			        {
-					if (result[x] != 0 && line[x] != result[x]) // only counts as changed if its a new value
+					if (result[x] != 0 && line[x] != result[x]) // only counts as changed if its a new value (meaning, if we're filling something, where previously was a 0 or other wrong value)
 					line[x] = result[x]; // only update positions that we know the correct building, the unknow are left 0
-					changed = 1;
+					*changed = 1; // flag changed to 1 to indicate "there was a change"
 					x++; // increment the counter
 				}
 				set_line(grid, i, j, line); // write the line updated back to the grid
 			}
 		}
 
-void second_pass(int grid[4][4], int arr[4][4])
+void second_pass(int grid[4][4], int arr[4][4], int *changed)
 {
 	int i = 0;
 	while (i < 4)
@@ -197,12 +197,23 @@ void second_pass(int grid[4][4], int arr[4][4])
 		while (j < 4)
 		{
 			if (arr[i][j] == 2 || arr[i][j] == 3) // now the clues == to 2 or 3
-			solve_23(grid, i, j, arr[i][j]); // call the function solve_23 to check deduzir the possible max to that line
+			clue_2_3(grid, i, j, arr[i][j], changed); // call the function solve_23 to check the possible max to that line
 			j++; // increment position into the line
 		}
 		i++; // increment the line
 	}
 }
+
+void solve(int grid[4][4], int arr[4][4])
+{
+	int changed = 1;
+
+	start_grid(grid, arr);
+
+	while (changed)
+	{
+		changed = 0; // assuming nothing will change
+		second_pass(grid, arr, &changed);  // this function will update "changed" variavel to 1 if something changed, and repeat the loop until "changed" reamin 0 (nothing changed)
 
 
 
